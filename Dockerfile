@@ -1,40 +1,60 @@
-ARG NODE_VERSION=21.6.0
-ARG WIKI_NAME="mywiki"
+# syntax=docker/dockerfile:1.7
 
-# Base Image
-FROM node:${NODE_VERSION}-alpine as base
-WORKDIR /usr/src/app
-RUN apk add dumb-init
-RUN apk add curl
-COPY package.json .
-RUN npm install
-COPY . /usr/src/app/
+# ============================================================
+# Stage 1: source preparation
+# node:22-alpine provides a shell to chmod the entrypoint.
+# No npm install is needed — TiddlyWiki has zero prod deps.
+# ============================================================
+FROM node:22-alpine AS source
 
-# Playwright Tests
-FROM mcr.microsoft.com/playwright:focal as playwright-tests
-ENV CI=true
-WORKDIR /usr/src/app
-COPY package*.json ./
-RUN npm install @playwright/test
-COPY . /usr/src/app/
-RUN npx playwright install --with-deps
-RUN ["npx", "playwright", "test"]
-RUN npm install
-RUN npx playwright install
+WORKDIR /app
 
-#Jasmine Tests
-FROM base as jasmine-tests
-RUN apk add chromium
-ENV CHROME_BIN=/usr/bin/chromium-browser
-RUN npm run test
+# Copy only the runtime-required source tree.
+# Largest/most-stable dirs first for better layer caching.
+COPY boot/          ./boot/
+COPY core/          ./core/
+COPY core-server/   ./core-server/
+COPY editions/      ./editions/
+COPY languages/     ./languages/
+COPY plugins/       ./plugins/
+COPY themes/        ./themes/
+COPY package.json   ./package.json
+COPY tiddlywiki.js  ./tiddlywiki.js
 
-#Run TiddlyWiki
-FROM base as run
+# Ensure the entrypoint is executable (git may not preserve bits in CI).
+RUN chmod +x ./tiddlywiki.js
+
+# ============================================================
+# Stage 2: distroless runtime
+# gcr.io/distroless/nodejs22-debian12 contains:
+#   /nodejs/bin/node  — the only executable we need
+#   nonroot user uid=65532 gid=65532
+# No shell, no package manager, minimal attack surface.
+# ============================================================
+FROM gcr.io/distroless/nodejs22-debian12
+
 EXPOSE 8080
-COPY --from=base /usr/bin/dumb-init /usr/bin/dumb-init
-USER node
-WORKDIR /usr/src/app
-COPY --chown=node:node --from=base /usr/src/app/node_modules /usr/src/app/node_modules
-COPY --chown=node:node . /usr/src/app
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["node", "./tiddlywiki.js", "./editions/server", "--listen", "host=0.0.0.0"] 
+
+WORKDIR /app
+
+# Copy prepared source, owned by the distroless nonroot user.
+COPY --from=source --chown=65532:65532 /app /app
+
+# Wiki data is mounted here at runtime (Kubernetes PVC or docker -v).
+# The directory itself is created by an initContainer in Kubernetes.
+VOLUME ["/data/wiki"]
+
+# Run as distroless nonroot (uid 65532).
+USER nonroot
+
+# ENTRYPOINT must be exec-form — no shell exists in distroless.
+# /nodejs/bin/node is the node binary path in this image.
+ENTRYPOINT ["/nodejs/bin/node", "tiddlywiki.js"]
+
+# Default: serve the bundled standalone server edition.
+# This works out of the box with no PVC pre-population needed.
+#
+# To serve your own persistent wiki instead, override CMD:
+#   docker run ... <image> /data/wiki --listen host=0.0.0.0 port=8080
+# Or in Kubernetes, set deployment.spec.template.spec.containers[0].args
+CMD ["/app/editions/server", "--listen", "host=0.0.0.0", "port=8080"]
