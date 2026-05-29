@@ -21,6 +21,10 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+  # NOTE: the former docker-tests (Playwright/Jasmine run inside a Docker build)
+  # and build-docker-image (DockerHub publish) jobs were removed. The container
+  # image is now built and published to GHCR by ghcr-publish.yml, and unit tests
+  # run in the `test` job above. This drops a flaky, slow, DockerHub-coupled path.
   build-prerelease:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
