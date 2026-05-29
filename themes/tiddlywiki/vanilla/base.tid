@@ -63,6 +63,7 @@ $else$
 </$set>
 \end
 
+\import [[$:/core/macros/CSS/property]]
 \rules only filteredtranscludeinline transcludeinline macrodef macrocallinline macrocallblock
 
 /*
@@ -71,10 +72,20 @@ $else$
 
 {{$:/themes/tiddlywiki/vanilla/reset}}
 
-*, input[type="search"] {
-	box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;
+input[type="search"] {
+	outline-offset: initial;
+}
+
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+	outline: 2px solid <<colour primary>>;
+	outline-offset: -2px;
+	border-radius: 0.25em;
+}
+
+button:-moz-focusring, input:-moz-focusring, textarea:-moz-focusring, select:-moz-focusring {
+	outline: 2px solid <<colour primary>>;
+	outline-offset: -2px;
+	border-radius: 0.25em;
 }
 
 /*
@@ -86,6 +97,12 @@ html button {
 	fill: <<colour button-foreground>>;
 	background: <<colour button-background>>;
 	border-color: <<colour button-border>>;
+	cursor: pointer;
+}
+
+button:disabled {
+	cursor: default;
+	color: <<colour muted-foreground>>;
 }
 
 button:disabled svg {
@@ -157,16 +174,16 @@ code {
 	color: <<colour code-foreground>>;
 	background-color: <<colour code-background>>;
 	border: 1px solid <<colour code-border>>;
-	white-space: {{$:/themes/tiddlywiki/vanilla/options/codewrapping}};
+	white-space: pre-wrap;
 	padding: 0 3px 2px;
 	border-radius: 3px;
 	font-family: {{$:/themes/tiddlywiki/vanilla/settings/codefontfamily}};
 }
 
 blockquote {
-	border-left: 5px solid <<colour blockquote-bar>>;
-	margin-left: 25px;
-	padding-left: 10px;
+	border-inline-start: 5px solid <<colour blockquote-bar>>;
+	<<margin-start 25px>>
+	<<padding-start 10px>>
 	quotes: "\201C""\201D""\2018""\2019";
 }
 
@@ -179,9 +196,8 @@ blockquote.tc-big-quote {
 	font-family: Georgia, serif;
 	position: relative;
 	background: <<colour pre-background>>;
-	border-left: none;
-	margin-left: 50px;
-	margin-right: 50px;
+	border-inline-start: none;
+	<<margin-inline 50px>>
 	padding: 10px;
 	border-radius: 8px;
 }
@@ -224,6 +240,11 @@ dl dt {
 textarea,
 input[type=text],
 input[type=search],
+input[type=number],
+input[type=password],
+input[type=email],
+input[type=tel],
+input[type=url],
 input[type=""],
 input:not([type]) {
 	color: <<colour foreground>>;
@@ -246,7 +267,9 @@ input[type="search"]::-webkit-search-results-decoration {
 }
 
 svg.tc-image-button {
-	padding: 0px 1px 1px 0px;
+	padding-top: 0px;
+	padding-bottom: 1px;
+	<<padding-inline 0px 1px>>
 }
 
 .tc-icon-wrapper > svg {
@@ -280,6 +303,13 @@ kbd {
 	color: <<colour highlight-foreground>>;
 }
 
+/* Markdown uses mark element to highlight */
+
+mark {
+	background: <<colour highlight-background>>;
+	color: <<colour highlight-foreground>>;
+}
+
 form.tc-form-inline {
 	display: inline;
 }
@@ -288,10 +318,13 @@ form.tc-form-inline {
 Markdown likes putting code elements inside pre elements
 */
 pre > code {
-	padding: 0;
+	display: block;
+	padding: 0.5em;
 	border: none;
+	white-space: {{$:/themes/tiddlywiki/vanilla/options/codewrapping}};
 	background-color: inherit;
 	color: inherit;
+	overflow-x: auto;
 }
 
 /*
@@ -405,6 +438,7 @@ Tiddler frame in story river
 
 :root {
 	color-scheme: {{{ [{$:/palette}get[color-scheme]] ~light }}};
+	text-autospace: normal;
 }
 
 /*
@@ -641,7 +675,7 @@ html body.tc-body .tc-btn-rounded:hover svg {
 
 
 .tc-btn-text {
-	margin-left: 7px;
+	<<margin-start 7px>>
 }
 
 /* used for documentation "fake" buttons */
@@ -714,7 +748,7 @@ button svg.tc-image-button, button .tc-image-button img {
 	border: none;
 	width: 100%;
 	width: calc(100% + 2px);
-	margin-left: -43px;
+	<<margin-start -43px>>
 	text-align: center;
 	border-top: 2px solid <<colour tiddler-info-background>>;
 	margin-top: 4px;
@@ -742,7 +776,7 @@ button svg.tc-image-button, button .tc-image-button img {
 	border: none;
 	width: 23px;
 	text-align: center;
-	margin-left: -35px;
+	<<margin-start -35px>>
 	top: 6px;
 	bottom: 6px;
 }
@@ -760,7 +794,7 @@ button svg.tc-image-button, button .tc-image-button img {
 
 	.tc-fold-banner {
 		width: 16px;
-		margin-left: -16px;
+		<<margin-start -16px>>
 		font-size: 0.75em;
 	}
 
@@ -910,7 +944,8 @@ button.tc-btn-invisible.tc-remove-tag-button {
 	font-weight: normal;
 }
 
-.tc-sidebar-header .tc-sidebar-lists p {
+.tc-sidebar-header .tc-sidebar-lists p,
+.tc-sidebar-tools-item {
 	margin-top: 3px;
 	margin-bottom: 3px;
 }
@@ -1009,9 +1044,9 @@ button.tc-btn-invisible.tc-remove-tag-button {
 	.tc-sidebar-scrollable {
 		position: fixed;
 		top: {{$:/themes/tiddlywiki/vanilla/metrics/storytop}};
-		left: {{$:/themes/tiddlywiki/vanilla/metrics/storyright}};
+		inset-inline-start: {{$:/themes/tiddlywiki/vanilla/metrics/storyright}};
 		bottom: 0;
-		right: 0;
+		inset-inline-end: 0;
 		overflow-y: auto;
 		overflow-x: auto;
 		-webkit-overflow-scrolling: touch;
@@ -1019,9 +1054,16 @@ button.tc-btn-invisible.tc-remove-tag-button {
 		padding: 71px 0 28px 42px;
 	}
 
-	html[dir="rtl"] .tc-sidebar-scrollable {
-		left: auto;
-		right: {{$:/themes/tiddlywiki/vanilla/metrics/storyright}};
+	@supports not (inset-inline-start: 0) {
+		.tc-sidebar-scrollable {
+			left: {{$:/themes/tiddlywiki/vanilla/metrics/storyright}};
+			right: 0;
+		}
+
+		html[dir="rtl"] .tc-sidebar-scrollable {
+			left: auto;
+			right: {{$:/themes/tiddlywiki/vanilla/metrics/storyright}};
+		}
 	}
 
 	.tc-story-river {
@@ -1083,7 +1125,6 @@ button.tc-btn-invisible.tc-remove-tag-button {
 {{$:/themes/tiddlywiki/vanilla/sticky}}
 
 .tc-tiddler-info {
-	overflow: hidden;
 	padding: 14px 42px 14px 42px;
 	background-color: <<colour tiddler-info-background>>;
 	border-top: 1px solid <<colour tiddler-info-border>>;
@@ -1108,13 +1149,17 @@ button.tc-btn-invisible.tc-remove-tag-button {
 
 }
 
+.tc-tiddler-info-controls {
+	position: absolute;
+	inset-inline-end: 0;
+}
+
 .tc-view-field-table {
 	width: 100%;
 }
 
 .tc-view-field-name {
 	width: 1%; /* Makes this column be as narrow as possible */
-	white-space: nowrap;
 	vertical-align: top;
 	text-align: right;
 	font-style: italic;
@@ -1171,7 +1216,7 @@ button.tc-btn-invisible.tc-remove-tag-button {
 
 .tc-tiddler-title-icon {
 	vertical-align: middle;
-	margin-right: .1em;
+	<<margin-end ".1em">>
 }
 
 .tc-tiddler-title-icon svg {
@@ -1181,6 +1226,20 @@ button.tc-btn-invisible.tc-remove-tag-button {
 
 .tc-system-title-prefix {
 	color: <<colour muted-foreground>>;
+}
+
+.tc-tiddler-lazy-loading {
+	height: 4px;
+	width: 100%;
+	background: no-repeat linear-gradient(<<colour background>> 0 0),no-repeat linear-gradient(<<colour background>> 0 0),<<colour primary>>;
+	background-size: 60% 100%;
+	animation: animation-loading-progress 3s infinite;
+}
+
+@keyframes animation-loading-progress {
+	0%   {background-position:-150% 0,-150% 0}
+	66%  {background-position: 250% 0,-150% 0}
+	100% {background-position: 250% 0, 250% 0}
 }
 
 .tc-titlebar h2 {
@@ -1208,7 +1267,7 @@ button.tc-btn-invisible.tc-remove-tag-button {
 }
 
 .tc-tiddler-frame .tc-tiddler-controls {
-	float: right;
+	float: inline-end;
 	padding: 3px; /* make space for outline */
 }
 
@@ -1330,10 +1389,6 @@ canvas.tc-edit-bitmapeditor  {
 
 .tc-edit-bitmapeditor-height {
 	display: block;
-}
-
-.tc-tiddler-body {
-	clear: both;
 }
 
 .tc-single-tiddler-window .tc-tiddler-body,
@@ -1755,7 +1810,7 @@ html body.tc-body.tc-single-tiddler-window {
 */
 
 .tc-viewswitcher .tc-image-button {
-	margin-right: .3em;
+	<<margin-end ".3em">>
 }
 
 .tc-page-container.tc-page-view-zoomin .tc-tiddler-frame {
@@ -1838,7 +1893,7 @@ html body.tc-body.tc-single-tiddler-window {
 	display: block;
 	padding: 0 14px 0 14px;
 	width: 100%;
-	text-align: left;
+	text-align: start;
 	color: <<colour foreground>>;
 	line-height: 1.4;
 }
@@ -2142,7 +2197,7 @@ html body.tc-body.tc-single-tiddler-window {
 	display: block;
 	padding-top: 14px;
 	vertical-align: top;
-	text-align: right;
+	text-align: end;
 	margin-bottom: inherit;
 	margin-right: -1px;
 	max-width: 33%;
@@ -2180,20 +2235,20 @@ html body.tc-body.tc-single-tiddler-window {
 	width: 100%;
 	margin-top: 3px;
 	margin-right: 0;
-	text-align: right;
+	text-align: end;
 	background-color: <<colour tab-background>>;
-	border-left: 1px solid <<colour tab-border>>;
+	border-inline-start: 1px solid <<colour tab-border>>;
 	border-bottom: 1px solid <<colour tab-border>>;
-	border-right: none;
-	border-top-left-radius: 2px;
-	border-bottom-left-radius: 2px;
-	border-top-right-radius: 0;
-	border-bottom-right-radius: 0;
+	border-inline-end: none;
+	border-start-start-radius: 2px;
+	border-end-start-radius: 2px;
+	border-start-end-radius: 0;
+	border-end-end-radius: 0;
 }
 
 .tc-tab-buttons.tc-vertical button.tc-tab-selected {
 	background-color: <<colour tab-background-selected>>;
-	border-right: 1px solid <<colour tab-background-selected>>;
+	border-inline-end: 1px solid <<colour tab-background-selected>>;
 }
 
 .tc-tab-divider {
@@ -2212,8 +2267,8 @@ html body.tc-body.tc-single-tiddler-window {
 	display: inline-block;
 	vertical-align: top;
 	padding-top: 0;
-	padding-left: 14px;
-	border-left: 1px solid <<colour tab-border>>;
+	<<padding-start 14px>>
+	border-inline-start: 1px solid <<colour tab-border>>;
 	-webkit-flex: 1 0 70%;
 	flex: 1 0 70%;
 	overflow: auto;
@@ -2374,6 +2429,17 @@ html body.tc-body.tc-single-tiddler-window {
 ** Import table
 */
 
+.tc-import-option {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+	margin: 0.5em 0;
+	padding: 0.5em;
+	background: <<colour tiddler-editor-background>>;
+	border: 1px solid <<colour tiddler-editor-border>>;
+	border-radius: 4px;
+}
+
 .tc-import-table {
 	width: 100%;
 }
@@ -2423,7 +2489,7 @@ html body.tc-body.tc-single-tiddler-window {
 .tc-alert-toolbar {
 	position: absolute;
 	top: 7px;
-	right: 7px;
+	inset-inline-end: 7px;
 	line-height: 0;
 }
 
@@ -2507,6 +2573,10 @@ html body.tc-body.tc-single-tiddler-window {
 
 .tc-control-panel td {
 	padding: 4px;
+}
+
+.tc-control-panel table > tbody > tr > td {
+	text-align: start;
 }
 
 .tc-control-panel table, .tc-control-panel table input, .tc-control-panel table textarea {
@@ -2595,6 +2665,9 @@ a.tc-tiddlylink.tc-plugin-info:hover > .tc-plugin-info-chunk .tc-plugin-info-sta
 	flex-grow: 0;
 	flex-shrink: 0;
 	line-height: 1;
+	height: 2em;
+	width: 2em;
+	display: grid;
 }
 
 .tc-plugin-info-chunk.tc-plugin-info-description {
@@ -2661,8 +2734,9 @@ a.tc-tiddlylink.tc-plugin-info:hover > .tc-plugin-info-chunk .tc-plugin-info-sta
 }
 
 .tc-plugin-info-chunk.tc-plugin-info-icon img, .tc-plugin-info-chunk.tc-plugin-info-icon svg {
-	width: 2em;
-	height: 2em;
+	max-width: 2em;
+	max-height: 2em;
+	margin: auto;
 }
 
 .tc-plugin-info-dropdown {
@@ -2755,6 +2829,27 @@ a.tc-tiddlylink.tc-plugin-info:hover > .tc-plugin-info-chunk .tc-plugin-info-sta
 	float: right;
 }
 
+/* Float tc-clearfix. Needs to be used by elements that allow float:right in their content.
+** So the floating element does not overflow
+*/
+
+.tc-clearfix:after {
+	content: "";
+	clear: both;
+	display: table;
+}
+
+/* Fix overflow toc, manager and testcase output */
+.tc-tiddler-body .tc-tabbed-table-of-contents, .tc-manager-list-item-content, .tc-test-case-output {
+	overflow-x: auto;
+}
+
+/* A wrapper to fix table overflow */
+
+.tc-table-wrapper {
+	overflow-x: auto;
+}
+
 /*
 ** Chooser
 */
@@ -2768,7 +2863,9 @@ a.tc-tiddlylink.tc-plugin-info:hover > .tc-plugin-info-chunk .tc-plugin-info-sta
 .tc-chooser-item {
 	border-bottom: 1px solid <<colour table-header-background>>;
 	border-top: 1px solid <<colour table-header-background>>;
-	padding: 2px 4px 2px 14px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	<<padding-inline 14px 4px>>
 }
 
 .tc-drop-down .tc-chooser-item {
@@ -2801,20 +2898,23 @@ a.tc-tiddlylink.tc-plugin-info:hover > .tc-plugin-info-chunk .tc-plugin-info-sta
 }
 
 .tc-chosen > .tc-tiddlylink:before {
-	margin-left: -10px;
+	<<margin-start "-10px">>
 	position: relative;
 	content: "» ";
 }
 
 .tc-chooser-item svg,
 .tc-chooser-item img{
-	width: 1em;
-	height: 1em;
+	max-width: 1em;
+	max-height: 1em;
 	vertical-align: middle;
 }
 
 .tc-language-chooser .tc-image-button img {
-	width: 2em;
+	max-width: 2em;
+	max-height: 1em;
+	width: auto;
+	height: auto;
 	vertical-align: -0.15em;
 }
 
@@ -2863,11 +2963,11 @@ input.tc-palette-manager-colour-input {
 
 .tc-table-of-contents ol {
 	list-style-type: none;
-	padding-left: 0;
+	<<padding-start 0>>
 }
 
 .tc-table-of-contents ol ol {
-	padding-left: 1em;
+	<<padding-start 1em>>
 }
 
 .tc-table-of-contents li {
@@ -2908,7 +3008,7 @@ input.tc-palette-manager-colour-input {
 .tc-tabbed-table-of-contents .tc-table-of-contents {
 	z-index: 100;
 	display: inline-block;
-	padding-left: 1em;
+	<<padding-start 1em>>
 	max-width: 50%;
 	-webkit-flex: 0 0 auto;
 	flex: 0 0 auto;
@@ -3157,17 +3257,17 @@ html body.tc-dirty span.tc-dirty-indicator, html body.tc-dirty span.tc-dirty-ind
 */
 
 .tc-tree div {
-	padding-left: 14px;
+	<<padding-start "14px">>
 }
 
 .tc-tree ol {
 	list-style-type: none;
-	padding-left: 0;
+	<<padding-start 0>>
 	margin-top: 0;
 }
 
 .tc-tree ol ol {
-	padding-left: 1em;
+	<<padding-start 1em>>
 }
 
 .tc-tree button {
@@ -3298,7 +3398,7 @@ span.tc-translink > a:first-child {
 	line-height: 0;
 	border-radius: 1em;
 	vertical-align: text-bottom;
-	margin-right: 0.25em;
+	<<margin-end "0.25em">>
 }
 
 .tc-test-case-result-icon-pass {
@@ -3330,7 +3430,7 @@ span.tc-translink > a:first-child {
 }
 
 .tc-test-case-toolbar {
-	float: right;
+	float: inline-end;
 }
 
 .tc-test-case-toolbar svg {
@@ -3464,11 +3564,11 @@ span.tc-translink > a:first-child {
 }
 
 .tc-tiny-gap-left {
-	margin-left: .25em;
+	<<margin-start ".25em">>
 }
 
 .tc-tiny-gap-right {
-	margin-right: .25em;
+	<<margin-end ".25em">>
 }
 
 .tc-small-gap {
@@ -3477,11 +3577,11 @@ span.tc-translink > a:first-child {
 }
 
 .tc-small-gap-left {
-	margin-left: .5em;
+	<<margin-start ".5em">>
 }
 
 .tc-small-gap-right {
-	margin-right: .5em;
+	<<margin-end ".5em">>
 }
 
 .tc-big-gap {
@@ -3490,11 +3590,11 @@ span.tc-translink > a:first-child {
 }
 
 .tc-big-gap-left {
-	margin-left: 1em;
+	<<margin-start 1em>>
 }
 
 .tc-big-gap-right {
-	margin-right: 1em;
+	<<margin-end 1em>>
 }
 
 .tc-word-break {
@@ -3505,4 +3605,60 @@ span.tc-translink > a:first-child {
 
 .tc-tiny-v-gap-bottom {
 	margin-bottom: 3px;
+}
+
+/* TODO: Remove the following rule once 2020 baseline is supported */
+@supports not (border-inline-start: 1px solid #000000) {
+	blockquote {
+		border-left: 5px solid <<colour blockquote-bar>>;
+	}
+
+	blockquote.tc-big-quote {
+		border-left: none;
+	}
+
+	.tc-tab-buttons.tc-vertical button {
+		border-left: 1px solid <<colour tab-border>>;
+		border-right: none;
+	}
+
+	.tc-tab-buttons.tc-vertical button.tc-tab-selected {
+		border-right: 1px solid <<colour tab-background-selected>>;
+	}
+
+	.tc-tab-content.tc-vertical {
+		border-left: 1px solid <<colour tab-border>>;
+	}
+}
+
+/* TODO: Remove the following rule once 2021 baseline is supported */
+@supports not (border-start-start-radius: 0px) {
+	.tc-tab-buttons.tc-vertical button {
+		border-top-left-radius: 2px;
+		border-bottom-left-radius: 2px;
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+	}
+}
+
+/* TODO: Remove the following rule once 2021 baseline is supported */
+@supports not (inset-inline-start: 0) {
+	.tc-tiddler-info-controls {
+		right: 0;
+	}
+
+	.tc-alert-toolbar {
+		right: 7px;
+	}
+}
+
+/* TODO: Remove the following rule once 2023 baseline is supported */
+@supports not (float: inline-end) {
+	.tc-test-case-toolbar {
+		float: right;
+	}
+
+	.tc-tiddler-frame .tc-tiddler-controls {
+		float: right;
+	}
 }

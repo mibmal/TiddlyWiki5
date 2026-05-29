@@ -6,10 +6,6 @@ module-type: widget
 Widget to dynamically represent one or more tiddlers
 
 \*/
-(function(){
-
-/*jslint node: true, browser: true */
-/*global $tw: false */
 "use strict";
 
 var Widget = require("$:/core/modules/widgets/widget.js").widget;
@@ -75,7 +71,9 @@ DataWidget.prototype.computeDataTiddlerValues = function() {
 		}
 	});
 	// Deal with $tiddler, $filter or $compound-tiddler attributes
-	var tiddlers = [],title;
+	var tiddlers = [],
+		compoundTiddlers,
+		title;
 	if(this.hasAttribute("$tiddler")) {
 		title = this.getAttribute("$tiddler");
 		if(title) {
@@ -103,8 +101,17 @@ DataWidget.prototype.computeDataTiddlerValues = function() {
 			tiddlers.push.apply(tiddlers,this.extractCompoundTiddler(title));
 		}
 	}
+	if(this.hasAttribute("$compound-filter")) {
+		filter = this.getAttribute("$compound-filter");
+		if(filter) {
+			compoundTiddlers = this.wiki.filterTiddlers(filter);
+			$tw.utils.each(compoundTiddlers, function(title){
+				tiddlers.push.apply(tiddlers,self.extractCompoundTiddler(title));
+			});
+		}
+	}
 	// Return the literal item if none of the special attributes were used
-	if(!this.hasAttribute("$tiddler") && !this.hasAttribute("$filter") && !this.hasAttribute("$compound-tiddler")) {
+	if(!this.hasAttribute("$tiddler") && !this.hasAttribute("$filter") && !this.hasAttribute("$compound-tiddler") && !this.hasAttribute("$compound-filter")) {
 		if(Object.keys(item).length > 0 && !!item.title) {
 			return [new $tw.Tiddler(item)];
 		} else {
@@ -112,7 +119,6 @@ DataWidget.prototype.computeDataTiddlerValues = function() {
 		}
 	} else {
 		// Apply the item fields to each of the tiddlers
-		delete item.title; // Do not overwrite the title
 		if(Object.keys(item).length > 0) {
 			$tw.utils.each(tiddlers,function(tiddler,index) {
 				tiddlers[index] = new $tw.Tiddler(tiddler,item);
@@ -152,7 +158,7 @@ DataWidget.prototype.extractCompoundTiddler = function(title) {
 Selectively refreshes the widget if needed. Returns true if the widget or any of its children needed re-rendering
 */
 DataWidget.prototype.refresh = function(changedTiddlers) {
-	var changedAttributes = this.computeAttributes();
+	this.computeAttributes();
 	var newPayload = this.computeDataTiddlerValues();
 	if(hasPayloadChanged(this.dataPayload,newPayload)) {
 		this.dataPayload = newPayload;
@@ -180,5 +186,3 @@ function hasPayloadChanged(a,b) {
 }
 
 exports.data = DataWidget;
-
-})();

@@ -6,15 +6,10 @@ tags: [[$:/tags/test-spec]]
 Tests the wiki based tests
 
 \*/
-(function(){
 
-/*jslint node: true, browser: true */
-/*global $tw: false */
 "use strict";
 
 var TEST_WIKI_TIDDLER_FILTER = "[all[tiddlers+shadows]type[text/vnd.tiddlywiki-multiple]tag[$:/tags/wiki-test-spec]]";
-
-var widget = require("$:/core/modules/widgets/widget.js");
 
 describe("Wiki-based tests", function() {
 
@@ -24,12 +19,19 @@ describe("Wiki-based tests", function() {
 		var tiddler = $tw.wiki.getTiddler(title);
 		it(tiddler.fields.title + ": " + tiddler.fields.description, function() {
 			// Add our tiddlers
-			var wiki = new $tw.Wiki(),
+			var wiki = $tw.test.wiki(),
 				coreTiddler = $tw.wiki.getTiddler("$:/core");
 			if(coreTiddler) {
 				wiki.addTiddler(coreTiddler);
 			}
 			wiki.addTiddlers(readMultipleTiddlersTiddler(title));
+			// Unpack plugin tiddlers
+			wiki.readPluginInfo();
+			wiki.registerPluginTiddlers("plugin");
+			wiki.unpackPluginTiddlers();
+			wiki.addIndexersToWiki();
+			// Clear changes queue
+			wiki.clearTiddlerEventQueue();
 			// Complain if we don't have the ouput and expected results
 			if(!wiki.tiddlerExists("Output")) {
 				throw "Missing 'Output' tiddler";
@@ -82,15 +84,13 @@ describe("Wiki-based tests", function() {
 		$tw.fakeDocument.setSequenceNumber(0);
 		var wrapper = $tw.fakeDocument.createElement("div");
 		widgetNode.render(wrapper,null);
-// console.log(require("util").inspect(wrapper,{depth: 8}));
+		// console.log(require("util").inspect(wrapper,{depth: 8}));
 		return wrapper;
 	}
 
 	function refreshWidgetNode(widgetNode,wrapper) {
 		widgetNode.refresh(widgetNode.wiki.changedTiddlers,wrapper);
-// console.log(require("util").inspect(wrapper,{depth: 8}));
+		// console.log(require("util").inspect(wrapper,{depth: 8}));
 	}
 
 });
-
-})();
