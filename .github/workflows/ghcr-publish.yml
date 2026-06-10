@@ -11,8 +11,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   packages: write
+  pull-requests: write
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -116,11 +117,14 @@ jobs:
           VERSION=$(node -p "require('./package.json').version")
           IS_DEFAULT="${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}"
 
+          BUILD_TAG="${VERSION}.${{ github.run_number }}"
+
           TAGS="$IMAGE:$SHA"
           if [ "$IS_DEFAULT" = "true" ]; then
             TAGS="$TAGS
           $IMAGE:latest
-          $IMAGE:$VERSION"
+          $IMAGE:$VERSION
+          $IMAGE:$BUILD_TAG"
           fi
           # Also tag on v* git tags
           if [ "${{ github.ref_type }}" = "tag" ]; then
@@ -149,3 +153,66 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Export build tag
+        id: build_tag
+        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "build_tag=${VERSION}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+  bump-chart:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Compute versions
+        id: versions
+        run: |
+          TW_VERSION=$(node -p "require('./package.json').version")
+          BUILD_TAG="${TW_VERSION}.${{ github.run_number }}"
+
+          # Bump the chart patch version (0.1.1 -> 0.1.2) on each build
+          CHART_VERSION=$(awk '/^version:/{print $2; exit}' helm/tiddlywiki/Chart.yaml)
+          CHART_PATCH=$(echo "$CHART_VERSION" | awk -F. '{print $3}')
+          CHART_NEW=$(echo "$CHART_VERSION" | awk -F. -v p="$((CHART_PATCH+1))" '{print $1"."$2"."p}')
+
+          echo "build_tag=$BUILD_TAG" >> "$GITHUB_OUTPUT"
+          echo "chart_version=$CHART_NEW" >> "$GITHUB_OUTPUT"
+          echo "tw_version=$TW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update Chart.yaml and values.yaml
+        run: |
+          sed -i "s/^version:.*/version: ${{ steps.versions.outputs.chart_version }}/" helm/tiddlywiki/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${{ steps.versions.outputs.build_tag }}\"/" helm/tiddlywiki/Chart.yaml
+          # Update only the main image tag (first occurrence of tag: under image:)
+          awk '/^image:/{found=1} found && /^  tag:/{sub(/tag:.*/, "tag: \"${{ steps.versions.outputs.build_tag }}\""); found=0} {print}' \
+            helm/tiddlywiki/values.yaml > /tmp/values.yaml && mv /tmp/values.yaml helm/tiddlywiki/values.yaml
+
+      - name: Push branch and open PR
+        run: |
+          BRANCH="chore/chart-bump-${{ github.run_number }}"
+          git checkout -b "$BRANCH"
+          git add helm/tiddlywiki/Chart.yaml helm/tiddlywiki/values.yaml
+          git commit -m "chore(helm): bump chart to ${{ steps.versions.outputs.chart_version }}, image to ${{ steps.versions.outputs.build_tag }}"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "chore(helm): bump chart to ${{ steps.versions.outputs.chart_version }}, image to ${{ steps.versions.outputs.build_tag }}" \
+            --body "Auto-generated after successful image push. Updates:
+          - \`Chart.yaml\` version: \`${{ steps.versions.outputs.chart_version }}\`
+          - \`Chart.yaml\` appVersion: \`${{ steps.versions.outputs.build_tag }}\`
+          - \`values.yaml\` image.tag: \`${{ steps.versions.outputs.build_tag }}\`" \
+            --base master \
+            --head "$BRANCH"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
