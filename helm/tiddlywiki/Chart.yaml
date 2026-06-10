@@ -2,8 +2,8 @@ apiVersion: v2
 name: tiddlywiki
 description: TiddlyWiki5 personal wiki server
 type: application
-version: 0.1.3
-appVersion: "5.4.1-prerelease.11"
+version: 0.1.4
+appVersion: "5.4.1-prerelease.12"
 
 # 0.1.1 — Fix crash-loop ("[dumb-init] /data/wiki: Permission denied"): the
 #   image ENTRYPOINT is dumb-init and the "node ./tiddlywiki.js" invocation
