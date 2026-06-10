@@ -108,20 +108,36 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Read TiddlyWiki version
-        id: tw_version
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Compute image tags
+        id: tags
+        run: |
+          IMAGE="ghcr.io/${{ github.repository_owner }}/tiddlywiki5"
+          SHA="sha-$(git rev-parse --short HEAD)"
+          VERSION=$(node -p "require('./package.json').version")
+          IS_DEFAULT="${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}"
 
-      - name: Docker metadata
+          TAGS="$IMAGE:$SHA"
+          if [ "$IS_DEFAULT" = "true" ]; then
+            TAGS="$TAGS
+          $IMAGE:latest
+          $IMAGE:$VERSION"
+          fi
+          # Also tag on v* git tags
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAGS="$TAGS
+          $IMAGE:${{ github.ref_name }}"
+          fi
+
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "tags<<$EOF" >> "$GITHUB_OUTPUT"
+          echo "$TAGS" >> "$GITHUB_OUTPUT"
+          echo "$EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Docker metadata (labels only)
         id: meta
         uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
         with:
           images: ghcr.io/${{ github.repository_owner }}/tiddlywiki5
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ steps.tw_version.outputs.version }},enable={{is_default_branch}}
-            type=ref,event=tag
-            type=sha,format=short
 
       - name: Build and push (run stage only)
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
@@ -129,7 +145,7 @@ jobs:
           context: .
           target: run
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.tags.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
