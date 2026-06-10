@@ -187,6 +187,30 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
+          {{- if .Values.oauth2Proxy.enabled }}
+          {{/* When oauth2-proxy is enabled, /status requires auth. Probe the
+               proxy's unauthenticated /ping endpoint instead. */}}
+          startupProbe:
+            httpGet:
+              path: /ping
+              port: {{ .Values.oauth2Proxy.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: {{ .Values.oauth2Proxy.port }}
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: {{ .Values.oauth2Proxy.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          {{- else }}
           {{- with .Values.startupProbe }}
           startupProbe:
             {{- toYaml . | nindent 12 }}
@@ -200,6 +224,7 @@ spec:
           {{- with .Values.readinessProbe }}
           readinessProbe:
             {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- end }}
 
           {{- with .Values.securityContext }}
@@ -279,6 +304,13 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
+          startupProbe:
+            httpGet:
+              path: /ping
+              port: proxy
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
           livenessProbe:
             httpGet:
               path: /ping
@@ -289,6 +321,7 @@ spec:
             httpGet:
               path: /ping
               port: proxy
+            initialDelaySeconds: 5
             periodSeconds: 10
             failureThreshold: 3
           volumeMounts:
