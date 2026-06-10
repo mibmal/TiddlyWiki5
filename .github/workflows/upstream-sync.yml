@@ -3,9 +3,8 @@ name: Sync from upstream TiddlyWiki
 # Keeps this fork current with TiddlyWiki/TiddlyWiki5 automatically so it does
 # not need manual maintenance. Our additions (helm/, k8s/, Dockerfile, the
 # extra .github/workflows) are new files that don't conflict with upstream code,
-# so a fast-forward/clean merge is the normal case. If a merge conflict occurs,
-# the workflow pushes a branch and opens a PR for manual resolution instead of
-# failing silently.
+# so a rebase is the normal case. A PR is always opened so the branch ruleset
+# (no direct pushes, no merge commits) is respected.
 
 on:
   schedule:
@@ -31,44 +30,64 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Merge upstream
-        id: merge
+      - name: Rebase onto upstream
+        id: rebase
         run: |
           git remote add upstream https://github.com/TiddlyWiki/TiddlyWiki5.git
           git fetch upstream master
-          if git merge --no-edit upstream/master; then
-            echo "conflict=false" >> "$GITHUB_OUTPUT"
-          else
-            git merge --abort
-            echo "conflict=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Push merged master
-        if: steps.merge.outputs.conflict == 'false'
-        run: git push origin master
-
-      # On conflict, push a branch and open a PR for manual review.
-      - name: Prepare conflict branch
-        if: steps.merge.outputs.conflict == 'true'
-        run: |
           BRANCH="upstream-sync/$(date +%Y%m%d)"
           git checkout -b "$BRANCH"
-          git merge --no-commit --no-ff upstream/master || true
-          git add -A
-          git commit -m "chore: upstream sync (conflicts to resolve)" || true
-          git push origin "$BRANCH"
-          echo "BRANCH=$BRANCH" >> "$GITHUB_ENV"
+          if git rebase upstream/master; then
+            echo "conflict=false" >> "$GITHUB_OUTPUT"
+          else
+            git rebase --abort
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "BRANCH=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      # Conflict-free: push branch and open a PR (direct push to master is blocked by ruleset).
+      - name: Push sync branch
+        if: steps.rebase.outputs.conflict == 'false'
+        run: git push origin "${{ steps.rebase.outputs.BRANCH }}"
+
+      - name: Open sync PR
+        if: steps.rebase.outputs.conflict == 'false'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${{ steps.rebase.outputs.BRANCH }}`,
+              state: "open",
+            });
+            if (prs.length === 0) {
+              await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: "chore: sync from upstream TiddlyWiki",
+                head: "${{ steps.rebase.outputs.BRANCH }}",
+                base: "master",
+                body: "Automated upstream sync — rebased onto TiddlyWiki/TiddlyWiki5 master. Review and merge."
+              });
+            }
+
+      # On conflict, push a branch and open a PR for manual resolution.
+      - name: Prepare conflict branch
+        if: steps.rebase.outputs.conflict == 'true'
+        run: |
+          git push origin "${{ steps.rebase.outputs.BRANCH }}"
 
       - name: Open conflict PR
-        if: steps.merge.outputs.conflict == 'true'
+        if: steps.rebase.outputs.conflict == 'true'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: "Upstream sync needs manual conflict resolution",
-              head: process.env.BRANCH,
+              title: "chore: upstream sync (conflicts to resolve)",
+              head: "${{ steps.rebase.outputs.BRANCH }}",
               base: "master",
               body: "Automated upstream sync hit conflicts. Resolve and merge."
             });
