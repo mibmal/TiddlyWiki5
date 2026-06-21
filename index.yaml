@@ -2,8 +2,31 @@ apiVersion: v1
 entries:
   tiddlywiki:
   - apiVersion: v2
+    appVersion: 5.4.1-prerelease.15
+    created: "2026-06-21T23:32:31.524844092Z"
+    dependencies:
+    - alias: otelcollector
+      condition: otel.collector.enabled
+      name: opentelemetry-collector
+      repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+      version: 0.x.x
+    description: TiddlyWiki5 personal wiki server
+    digest: acce0eef5ff0eac9ccb1afbe67fc17be7c8fa1bdb73c6587e5dfcb743719cdd6
+    keywords:
+    - wiki
+    - tiddlywiki
+    - notes
+    maintainers:
+    - name: TiddlyWiki Community
+      url: https://tiddlywiki.com
+    name: tiddlywiki
+    type: application
+    urls:
+    - https://mibmal.github.io/TiddlyWiki5/tiddlywiki-0.1.5.tgz
+    version: 0.1.5
+  - apiVersion: v2
     appVersion: 5.4.1-prerelease.12
-    created: "2026-06-10T22:57:54.23938752Z"
+    created: "2026-06-21T23:32:31.521568664Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -26,7 +49,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 5.4.1-prerelease.11
-    created: "2026-06-10T22:57:54.234990132Z"
+    created: "2026-06-21T23:32:31.517555244Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -49,7 +72,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 5.4.1-prerelease.10
-    created: "2026-06-10T22:57:54.231703827Z"
+    created: "2026-06-21T23:32:31.514250591Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -72,7 +95,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 5.4.0
-    created: "2026-06-10T22:57:54.227490954Z"
+    created: "2026-06-21T23:32:31.510121167Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -116,4 +139,4 @@ entries:
     urls:
     - https://github.com/mibmal/TiddlyWiki5/releases/download/tiddlywiki-0.1.0/tiddlywiki-0.1.0.tgz
     version: 0.1.0
-generated: "2026-06-10T22:57:54.2237975Z"
+generated: "2026-06-21T23:32:31.506602301Z"
