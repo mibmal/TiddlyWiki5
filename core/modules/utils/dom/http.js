@@ -267,8 +267,12 @@ exports.httpRequest = function(options) {
 					return false;
 				}
 			}
-			if(hasHeader("Content-Type") && ["application/x-www-form-urlencoded","multipart/form-data","text/plain"].indexOf(getHeader["Content-Type"]) === -1) {
-				return false;
+			if(hasHeader("Content-Type")) {
+				// Strip any parameters (eg "; charset=UTF-8") before comparing the MIME type
+				var contentType = (getHeader("Content-Type") || "").split(";")[0].trim().toLowerCase();
+				if(["application/x-www-form-urlencoded","multipart/form-data","text/plain"].indexOf(contentType) === -1) {
+					return false;
+				}
 			}
 			return true;
 		},
