@@ -279,6 +279,15 @@ Server.prototype.requestHandler = function(request,response,options) {
 		response.end();
 		return;
 	}
+	// Reply to CORS preflight OPTIONS requests before authenticating. Browsers send
+	// preflights without credentials by design, so requiring authentication here would
+	// cause the preflight to fail with a 401 and the CORS headers set above would not be
+	// honoured by the browser.
+	if(this.corsEnable && request.method === "OPTIONS") {
+		response.writeHead(204);
+		response.end();
+		return;
+	}
 	// Check whether anonymous access is granted
 	state.allowAnon = this.isAuthorized(state.authorizationType,null);
 	// Authenticate with the first active authenticator
@@ -291,12 +300,6 @@ Server.prototype.requestHandler = function(request,response,options) {
 	// Authorize with the authenticated username
 	if(!this.isAuthorized(state.authorizationType,state.authenticatedUsername)) {
 		response.writeHead(401,"'" + state.authenticatedUsername + "' is not authorized to access '" + this.servername + "'");
-		response.end();
-		return;
-	}
-	// Reply to OPTIONS
-	if(this.corsEnable && request.method === "OPTIONS") {
-		response.writeHead(204);
 		response.end();
 		return;
 	}
