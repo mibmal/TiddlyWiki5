@@ -18,6 +18,20 @@ replicaCount: 1
 # TiddlyWiki server configuration
 # =============================================================================
 wiki:
+  # -- Server flavour: "classic" (single-wiki node server, the default) or
+  # "mws" (Multi-Wiki Server + SSO adapter image). In mws mode the image
+  # ENTRYPOINT handles state setup + init-store, `command` is not set, and
+  # `mwsArgs` below are passed as args. See values-mws.yaml for a full example.
+  mode: classic
+
+  # -- Args passed to the MWS image ENTRYPOINT when mode=mws (ignored otherwise).
+  mwsArgs:
+    - listen
+    - --listener
+    - host=0.0.0.0
+    - port=8080
+    - secure=true
+
   # -- Executable + leading args, set as the pod's `command:`. The image
   # ENTRYPOINT (dumb-init) does NOT include "node ./tiddlywiki.js" — that lives
   # only in the image CMD, which Kubernetes args replace. Setting command here
