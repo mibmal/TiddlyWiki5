@@ -127,6 +127,13 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
+          {{- if eq .Values.wiki.mode "mws" }}
+          # MWS mode: the image ENTRYPOINT (docker-entrypoint.sh) wires SQLite
+          # state onto the volume and runs `init-store` on first boot, so we
+          # leave command unset and pass only the MWS listen args.
+          args:
+            {{- toYaml .Values.wiki.mwsArgs | nindent 12 }}
+          {{- else }}
           # The image ENTRYPOINT is ["/usr/bin/dumb-init", "--"] and the
           # "node ./tiddlywiki.js" invocation lives only in the image CMD.
           # Kubernetes args REPLACE CMD, so without an explicit command the
@@ -139,6 +146,7 @@ spec:
             - {{ .Values.wiki.dataPath | quote }}
             - "--listen"
             {{- include "tiddlywiki.listenArgs" . | nindent 12 }}
+          {{- end }}
 
           ports:
             - name: http
