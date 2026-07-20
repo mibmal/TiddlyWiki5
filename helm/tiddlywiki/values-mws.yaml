@@ -8,9 +8,10 @@
 # apply; back up the SQLite store instead (e.g. Litestream).
 
 image:
-  # Build from mws-app/Dockerfile and push to your registry.
+  # Built + pushed by the MWS fork's .github/workflows/image-publish.yml.
+  # `latest` tracks main; pin to a `:sha-<short>` (or digest) for production GitOps.
   repository: ghcr.io/mibmal/tiddlywiki-mws
-  tag: "0.1.14-sso"
+  tag: "latest"
 
 replicaCount: 1          # SQLite single-writer — do not scale the writer
 # strategy.type defaults to Recreate; autoscaling defaults to disabled — leave as-is.
@@ -33,6 +34,21 @@ extraEnv:
   # Admin-controlled default plugin list seeded into each new personal wiki:
   - name: MWS_SSO_DEFAULT_PLUGINS
     value: "$:/plugins/tiddlywiki/tiddlyweb,$:/plugins/tiddlywiki/menubar,$:/plugins/tiddlywiki/codemirror"
+
+# Continuous SQLite backup + auto-restore on a fresh pod. Provide an
+# `mws-litestream` Secret with access-key-id / secret-access-key (see
+# docs/mws-argocd.md). The git-sync/snapshot cronjobs are left OFF for SQLite.
+litestream:
+  enabled: true
+  existingSecret: "mws-litestream"
+  replica:
+    type: s3
+    bucket: "CHANGE-ME-mws-backups"
+    path: "mws"
+    # endpoint: "https://<account>.r2.cloudflarestorage.com"   # for R2/MinIO
+    # forcePathStyle: true                                       # for MinIO
+gitSync: { enabled: false }
+snapshot: { enabled: false }
 
 # Auth perimeter. oauth2-proxy authenticates against the IdP and forwards
 # X-Auth-Request-Email (via --set-xauthrequest, already set by the chart), which
