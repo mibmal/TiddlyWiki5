@@ -2,8 +2,12 @@ apiVersion: v2
 name: tiddlywiki
 description: TiddlyWiki5 personal wiki server
 type: application
-version: 0.1.6
+version: 0.1.8
 appVersion: "5.5.0-prerelease.19"
+
+# 0.1.8 — mws mode: add Litestream continuous SQLite backup + restore-on-empty
+#   (litestream.*); values-mws.yaml enables it and points the image at the
+#   from-source ghcr tag. See docs/mws-argocd.md.
 
 # 0.1.1 — Fix crash-loop ("[dumb-init] /data/wiki: Permission denied"): the
 #   image ENTRYPOINT is dumb-init and the "node ./tiddlywiki.js" invocation

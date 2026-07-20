@@ -119,6 +119,39 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- end }}
 
+        {{- if and .Values.litestream.enabled .Values.litestream.restoreOnEmpty }}
+        # Restore the SQLite DB from the Litestream replica on first boot when the
+        # local DB is missing, so a fresh PVC recovers automatically. The
+        # -if-db-not-exists / -if-replica-exists guards make it a safe no-op
+        # otherwise (then the MWS entrypoint init-stores a fresh DB).
+        - name: litestream-restore
+          image: "{{ .Values.litestream.image.repository }}:{{ .Values.litestream.image.tag }}"
+          imagePullPolicy: {{ .Values.litestream.image.pullPolicy }}
+          args:
+            - restore
+            - -if-db-not-exists
+            - -if-replica-exists
+            - -config
+            - /etc/litestream/litestream.yml
+            - {{ .Values.wiki.dataPath }}/store/database.sqlite
+          env:
+            - name: LITESTREAM_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.litestream.existingSecret }}
+                  key: access-key-id
+            - name: LITESTREAM_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.litestream.existingSecret }}
+                  key: secret-access-key
+          volumeMounts:
+            - name: wiki-data
+              mountPath: {{ .Values.wiki.dataPath }}
+            - name: litestream-config
+              mountPath: /etc/litestream
+        {{- end }}
+
       containers:
         # -------------------------------------------------------
         # Main: TiddlyWiki server
@@ -372,6 +405,43 @@ spec:
               mountPath: /tmp
         {{- end }}
 
+        # -------------------------------------------------------
+        # Sidecar: Litestream (continuous SQLite backup, mws mode)
+        # Replicates dataPath/store/database.sqlite to object storage.
+        # -------------------------------------------------------
+        {{- if .Values.litestream.enabled }}
+        - name: litestream
+          image: "{{ .Values.litestream.image.repository }}:{{ .Values.litestream.image.tag }}"
+          imagePullPolicy: {{ .Values.litestream.image.pullPolicy }}
+          args: ["replicate", "-config", "/etc/litestream/litestream.yml"]
+          env:
+            - name: LITESTREAM_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.litestream.existingSecret }}
+                  key: access-key-id
+            - name: LITESTREAM_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.litestream.existingSecret }}
+                  key: secret-access-key
+          resources:
+            {{- toYaml .Values.litestream.resources | nindent 12 }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: wiki-data
+              mountPath: {{ .Values.wiki.dataPath }}
+            - name: litestream-config
+              mountPath: /etc/litestream
+              readOnly: true
+        {{- end }}
+
       # -------------------------------------------------------
       # Volumes
       # -------------------------------------------------------
@@ -404,6 +474,11 @@ spec:
         - name: plugin-{{ .name }}
           configMap:
             name: {{ if .existingConfigMap }}{{ .existingConfigMap }}{{ else }}{{ include "tiddlywiki.fullname" $ }}-plugin-{{ .name }}{{ end }}
+        {{- end }}
+        {{- if .Values.litestream.enabled }}
+        - name: litestream-config
+          configMap:
+            name: {{ include "tiddlywiki.fullname" . }}-litestream
         {{- end }}
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}

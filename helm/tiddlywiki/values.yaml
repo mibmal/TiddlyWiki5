@@ -196,6 +196,43 @@ oauth2Proxy:
 plugins: []
 
 # =============================================================================
+# Litestream — continuous SQLite backup (for wiki.mode=mws)
+# =============================================================================
+# Streams the MWS SQLite database (dataPath/store/database.sqlite) to
+# S3-compatible object storage, and (optionally) restores it on a fresh pod.
+# This is the backup mechanism for mws mode — the git-sync/snapshot cronjobs
+# below assume a flat tiddlers folder and do NOT apply to SQLite.
+litestream:
+  enabled: false
+
+  image:
+    repository: litestream/litestream
+    tag: "0.3.13"
+    pullPolicy: IfNotPresent
+
+  # S3-compatible replica target (AWS S3, Cloudflare R2, MinIO, etc.).
+  replica:
+    type: s3
+    bucket: ""
+    path: "mws"
+    # -- Endpoint for non-AWS S3 (e.g. R2/MinIO). Leave empty for AWS.
+    endpoint: ""
+    region: ""
+    # -- Set true for MinIO and some S3-compatibles that need path-style URLs.
+    forcePathStyle: false
+
+  # -- Secret with keys `access-key-id` and `secret-access-key`.
+  existingSecret: ""
+
+  # -- On first boot, restore the DB from the replica if the local DB is missing
+  # (via an init container). New pods with an empty PVC then recover automatically.
+  restoreOnEmpty: true
+
+  resources:
+    requests: { memory: 32Mi, cpu: 10m }
+    limits: { memory: 64Mi, cpu: 100m }
+
+# =============================================================================
 # Git sync backup CronJob
 # =============================================================================
 # Commits and pushes /data/wiki to a git remote on a schedule.

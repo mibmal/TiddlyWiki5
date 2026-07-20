@@ -1,0 +1,26 @@
+{{- if .Values.litestream.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tiddlywiki.fullname" . }}-litestream
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tiddlywiki.labels" . | nindent 4 }}
+data:
+  litestream.yml: |
+    dbs:
+      - path: {{ .Values.wiki.dataPath }}/store/database.sqlite
+        replicas:
+          - type: {{ .Values.litestream.replica.type }}
+            bucket: {{ .Values.litestream.replica.bucket | quote }}
+            path: {{ .Values.litestream.replica.path | quote }}
+            {{- with .Values.litestream.replica.endpoint }}
+            endpoint: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.litestream.replica.region }}
+            region: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.litestream.replica.forcePathStyle }}
+            force-path-style: true
+            {{- end }}
+{{- end }}
