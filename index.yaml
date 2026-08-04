@@ -2,8 +2,31 @@ apiVersion: v1
 entries:
   tiddlywiki:
   - apiVersion: v2
+    appVersion: 5.5.0-prerelease.31
+    created: "2026-08-04T23:13:35.979854711Z"
+    dependencies:
+    - alias: otelcollector
+      condition: otel.collector.enabled
+      name: opentelemetry-collector
+      repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+      version: 0.x.x
+    description: TiddlyWiki5 personal wiki server
+    digest: fbab414bd0c9997c4874527f1fb91867ff446f1af63cf7b807c44c0ead454f63
+    keywords:
+    - wiki
+    - tiddlywiki
+    - notes
+    maintainers:
+    - name: TiddlyWiki Community
+      url: https://tiddlywiki.com
+    name: tiddlywiki
+    type: application
+    urls:
+    - https://mibmal.github.io/TiddlyWiki5/tiddlywiki-0.1.13.tgz
+    version: 0.1.13
+  - apiVersion: v2
     appVersion: 5.5.0-prerelease.27
-    created: "2026-08-04T22:27:10.114649535Z"
+    created: "2026-08-04T23:13:35.976310266Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -26,7 +49,7 @@ entries:
     version: 0.1.12
   - apiVersion: v2
     appVersion: 5.5.0-prerelease.25
-    created: "2026-08-04T22:27:10.111122886Z"
+    created: "2026-08-04T23:13:35.971664367Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -49,7 +72,7 @@ entries:
     version: 0.1.11
   - apiVersion: v2
     appVersion: 5.5.0-prerelease.24
-    created: "2026-08-04T22:27:10.106794038Z"
+    created: "2026-08-04T23:13:35.968082938Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -72,7 +95,7 @@ entries:
     version: 0.1.10
   - apiVersion: v2
     appVersion: 5.5.0-prerelease.23
-    created: "2026-08-04T22:27:10.140242385Z"
+    created: "2026-08-04T23:13:36.006574759Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -95,7 +118,7 @@ entries:
     version: 0.1.9
   - apiVersion: v2
     appVersion: 5.5.0-prerelease.19
-    created: "2026-08-04T22:27:10.136747653Z"
+    created: "2026-08-04T23:13:36.003048932Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -118,7 +141,7 @@ entries:
     version: 0.1.8
   - apiVersion: v2
     appVersion: 5.5.0-prerelease.19
-    created: "2026-08-04T22:27:10.132631979Z"
+    created: "2026-08-04T23:13:35.998128465Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -141,7 +164,7 @@ entries:
     version: 0.1.6
   - apiVersion: v2
     appVersion: 5.4.1-prerelease.15
-    created: "2026-08-04T22:27:10.129223636Z"
+    created: "2026-08-04T23:13:35.994739822Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -164,7 +187,7 @@ entries:
     version: 0.1.5
   - apiVersion: v2
     appVersion: 5.4.1-prerelease.12
-    created: "2026-08-04T22:27:10.125238517Z"
+    created: "2026-08-04T23:13:35.990477063Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -187,7 +210,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 5.4.1-prerelease.11
-    created: "2026-08-04T22:27:10.122022992Z"
+    created: "2026-08-04T23:13:35.987179436Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -210,7 +233,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 5.4.1-prerelease.10
-    created: "2026-08-04T22:27:10.118669361Z"
+    created: "2026-08-04T23:13:35.983454168Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -233,7 +256,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 5.4.0
-    created: "2026-08-04T22:27:10.103156813Z"
+    created: "2026-08-04T23:13:35.963466343Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -277,4 +300,4 @@ entries:
     urls:
     - https://github.com/mibmal/TiddlyWiki5/releases/download/tiddlywiki-0.1.0/tiddlywiki-0.1.0.tgz
     version: 0.1.0
-generated: "2026-08-04T22:27:10.097686159Z"
+generated: "2026-08-04T23:13:35.959851293Z"
