@@ -8,6 +8,13 @@ on:
   push:
     branches: [master]
     tags: ["v*"]
+    # Break the chart-bump loop: the bump-chart job commits ONLY under helm/
+    # (helm/tiddlywiki/{Chart.yaml,values.yaml}). A push that changes nothing
+    # outside helm/ is therefore just a merged bump with no new image, so it must
+    # not trigger a redundant rebuild+publish+bump. Tag pushes and changes that
+    # touch any non-helm file still run.
+    paths-ignore:
+      - "helm/**"
   workflow_dispatch:
 
 permissions:
