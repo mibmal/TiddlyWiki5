@@ -7,6 +7,17 @@ on:
 env:
   NODE_VERSION: "22.22"
 jobs:
+  # Dockerfile syntax / structure check using BuildKit's built-in linter
+  # (`docker build --check`). Catches malformed instructions and frontend
+  # warnings at the top of the file before any expensive build runs. This is
+  # syntax-level only; deeper security linting (hadolint) is a separate job if
+  # the images get pinned-down further (see .hadolint.yaml when it is added).
+  dockerfile-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Lint Dockerfile (docker build --check)
+        run: docker build --check .
   test:
     runs-on: ubuntu-latest
     steps:
