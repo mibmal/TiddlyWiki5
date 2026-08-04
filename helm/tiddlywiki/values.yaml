@@ -11,14 +11,16 @@ image:
 # Build-time plugin baking. These values are read by the image-publish
 # workflow (.github/workflows/ghcr-publish.yml) and passed to the Docker build
 # as --build-arg, so the Dockerfile stays generic (ARG TW5_PLUGINS / TW5_PLUGIN_REF).
-# `plugins` is a space-separated list of GitHub "owner/repo[@ref]" plugin sources whose
-# plugins/ subdirectories are baked into the image; an optional "@ref" pins a tag/branch
-# per plugin (falls back to `ref` below). `ref` is the fallback branch/tag for any
-# plugin without a pin. Prefer this for nested/binary plugins that ConfigMap injection
-# cannot represent; simple flat text plugins can still go under the `plugins:` runtime list.
+# `plugins` is a single-line, space-separated list of "owner/repo[@ref][:subdir]" plugin
+# sources baked into the image (their whole `subdir` is copied under /usr/src/app/baked-plugins;
+# default subdir "plugins"). "@ref" pins a branch/tag per plugin (falls back to `ref`); ":subdir"
+# overrides where the plugins live for repos that don't use a plugins/ dir. Prefer this for
+# nested/binary plugins that ConfigMap injection cannot represent; simple flat text plugins can
+# go under the `plugins:` runtime list instead. Note: tw-command-palette:src provides both the
+# command palette and an autocomplete plugin; CodeMirror (CM5) is already bundled in core.
 imageBuild:
   # ref: "master"
-  # plugins: "flibbles/tw5-graph@v1.7.1 flibbles/tw5-vis-network@v10.6.3"
+  # plugins: "flibbles/tw5-graph@v1.7.1 flibbles/tw5-vis-network@v10.6.3 flibbles/tw5-relink@v2.6.0 bimlas/tw5-kin-filter@v1.0.1 crazko/krystal sobjornstad/TiddlyRemember@v1.4.1:tw-plugin tiddly-gittly/tw-command-palette@v2.4.0:src"
 
 # -- Number of replicas.
 # NOTE: TiddlyWiki writes tiddlers directly to disk with no distributed
