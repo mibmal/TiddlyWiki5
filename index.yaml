@@ -3,7 +3,7 @@ entries:
   tiddlywiki:
   - apiVersion: v2
     appVersion: 5.5.0-prerelease.24
-    created: "2026-08-04T22:21:32.297135435Z"
+    created: "2026-08-04T22:23:46.448320705Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -11,7 +11,7 @@ entries:
       repository: https://open-telemetry.github.io/opentelemetry-helm-charts
       version: 0.x.x
     description: TiddlyWiki5 personal wiki server
-    digest: fcb533a0a9e5ea5913c80b2f2dca190f07f9e2b0617b5f7f4b0a8b634b770891
+    digest: 59930cb4196f1fc8bef61705a86734ac8aa7b06ae0669985f272ba9717ec03ae
     keywords:
     - wiki
     - tiddlywiki
@@ -26,7 +26,7 @@ entries:
     version: 0.1.10
   - apiVersion: v2
     appVersion: 5.5.0-prerelease.23
-    created: "2026-08-04T22:21:32.324015797Z"
+    created: "2026-08-04T22:23:46.468596914Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -49,7 +49,7 @@ entries:
     version: 0.1.9
   - apiVersion: v2
     appVersion: 5.5.0-prerelease.19
-    created: "2026-08-04T22:21:32.320416214Z"
+    created: "2026-08-04T22:23:46.465852544Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -72,7 +72,7 @@ entries:
     version: 0.1.8
   - apiVersion: v2
     appVersion: 5.5.0-prerelease.19
-    created: "2026-08-04T22:21:32.316266526Z"
+    created: "2026-08-04T22:23:46.462505496Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -95,7 +95,7 @@ entries:
     version: 0.1.6
   - apiVersion: v2
     appVersion: 5.4.1-prerelease.15
-    created: "2026-08-04T22:21:32.312861206Z"
+    created: "2026-08-04T22:23:46.459874926Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -118,7 +118,7 @@ entries:
     version: 0.1.5
   - apiVersion: v2
     appVersion: 5.4.1-prerelease.12
-    created: "2026-08-04T22:21:32.308765895Z"
+    created: "2026-08-04T22:23:46.456603802Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -141,7 +141,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 5.4.1-prerelease.11
-    created: "2026-08-04T22:21:32.305403359Z"
+    created: "2026-08-04T22:23:46.454087314Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -164,7 +164,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 5.4.1-prerelease.10
-    created: "2026-08-04T22:21:32.30202478Z"
+    created: "2026-08-04T22:23:46.450911054Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -187,7 +187,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 5.4.0
-    created: "2026-08-04T22:21:32.293454349Z"
+    created: "2026-08-04T22:23:46.44506918Z"
     dependencies:
     - alias: otelcollector
       condition: otel.collector.enabled
@@ -231,4 +231,4 @@ entries:
     urls:
     - https://github.com/mibmal/TiddlyWiki5/releases/download/tiddlywiki-0.1.0/tiddlywiki-0.1.0.tgz
     version: 0.1.0
-generated: "2026-08-04T22:21:32.288806138Z"
+generated: "2026-08-04T22:23:46.442283077Z"
