@@ -2,8 +2,8 @@ apiVersion: v2
 name: tiddlywiki
 description: TiddlyWiki5 personal wiki server
 type: application
-version: 0.1.11
-appVersion: "5.5.0-prerelease.25"
+version: 0.1.12
+appVersion: "5.5.0-prerelease.27"
 
 # 0.1.8 — mws mode: add Litestream continuous SQLite backup + restore-on-empty
 #   (litestream.*); values-mws.yaml enables it and points the image at the
