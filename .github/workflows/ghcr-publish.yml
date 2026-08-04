@@ -8,13 +8,19 @@ on:
   push:
     branches: [master]
     tags: ["v*"]
-    # Break the chart-bump loop: the bump-chart job commits ONLY under helm/
-    # (helm/tiddlywiki/{Chart.yaml,values.yaml}). A push that changes nothing
-    # outside helm/ is therefore just a merged bump with no new image, so it must
-    # not trigger a redundant rebuild+publish+bump. Tag pushes and changes that
-    # touch any non-helm file still run.
+    # Only a change that can affect the IMAGE should trigger a rebuild+publish+bump.
+    # paths-ignore suppresses the run for pushes that touch ONLY these paths:
+    #   - helm/**   : a merged chart-bump (no image change) must not republish (loop break)
+    #   - docs/**    : documentation doesn't change the image
+    #   - .github/** : workflow/CI changes don't change the image
+    #   - *.md       : root-level docs
+    # Tag pushes and any change to Dockerfile/package.json/core/plugins/... still run,
+    # as does manual workflow_dispatch.
     paths-ignore:
       - "helm/**"
+      - "docs/**"
+      - ".github/**"
+      - "*.md"
   workflow_dispatch:
 
 permissions:
