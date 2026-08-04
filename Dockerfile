@@ -1,3 +1,9 @@
+# syntax=docker/dockerfile:1
+# The syntax= directive above (must be the first line) pins the BuildKit
+# Dockerfile frontend so `docker build --check .` uses a fixed linter-enabled
+# parser instead of whatever is bundled with the local engine. It requests the
+# built-in syntax/structure check from inside the Dockerfile itself; the CI job
+# `.github/workflows/ci.yml` (`dockerfile-check`) runs that check on every PR.
 ARG NODE_VERSION=21.6.0
 ARG WIKI_NAME="mywiki"
 # Space-separated GitHub "owner/repo" plugin sources baked into /usr/src/app/baked-plugins at build time.
@@ -17,6 +23,12 @@ ARG TW5_PLUGIN_REF=master
 # Base Image
 FROM node:${NODE_VERSION}-alpine AS base
 WORKDIR /usr/src/app
+# Re-declare the plugin ARGs inside the stage: ARGs declared before the first
+# FROM do NOT propagate into build stages, so without these the bake loop below
+# saw empty $TW5_PLUGINS and produced an empty baked-plugins dir. --build-arg
+# on the CLI sets the same-named ARG here and the global one.
+ARG TW5_PLUGINS
+ARG TW5_PLUGIN_REF=master
 RUN apk add dumb-init
 RUN apk add curl
 COPY package.json .
@@ -66,6 +78,7 @@ COPY --from=base /usr/bin/dumb-init /usr/bin/dumb-init
 USER node
 WORKDIR /usr/src/app
 COPY --chown=node:node --from=base /usr/src/app/node_modules /usr/src/app/node_modules
+COPY --chown=node:node --from=base /usr/src/app/baked-plugins /usr/src/app/baked-plugins
 COPY --chown=node:node . /usr/src/app
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["node", "./tiddlywiki.js", "./editions/server", "--listen", "host=0.0.0.0"]
