@@ -41,8 +41,15 @@ jobs:
       - name: Read imageBuild build args from helm values
         id: image_build
         run: |
-          PLUGINS=$(awk '/^imageBuild:/{f=1} f && /^[^#]*plugins:/{sub(/^[ \t]*plugins:[ \t]*"?/,"");sub(/".*/,"");print;exit}' helm/tiddlywiki/values.yaml)
-          REF=$(awk '/^imageBuild:/{f=1} f && /^[^#]*ref:/{sub(/^[ \t]*ref:[ \t]*"?/,"");sub(/".*/,"");print;exit}' helm/tiddlywiki/values.yaml)
+          # Only read keys BELONGING to the imageBuild block: the key must be on an
+          # INDENTED line (excludes the top-level runtime `plugins:`/`ref:` lists) and must
+          # NOT be #-commented (imageBuild is enabled only when these lines are uncommented).
+          # The previous `/^[^#]*plugins:/` scanned past the commented imageBuild line and
+          # matched `plugins: []` on the runtime section (~line 210), injecting a bogus
+          # `TW5_PLUGINS=[]` build arg that OVERRODE the Dockerfile ARG default and broke the
+          # bake. Guard: indented key AND line-not-comment.
+          PLUGINS=$(awk '/^imageBuild:/{f=1;next} f && /^[[:space:]]+plugins:/ && $0 !~ /^[[:space:]]*#/{sub(/^[[:space:]]*plugins:[[:space:]]*"?/,"");sub(/".*/,"");print;exit}' helm/tiddlywiki/values.yaml)
+          REF=$(awk '/^imageBuild:/{f=1;next} f && /^[[:space:]]+ref:/ && $0 !~ /^[[:space:]]*#/{sub(/^[[:space:]]*ref:[[:space:]]*"?/,"");sub(/".*/,"");print;exit}' helm/tiddlywiki/values.yaml)
           ARGS=""
           [ -n "$REF" ] && ARGS="$ARGS"$'TW5_PLUGIN_REF='"$REF"$'\n'
           [ -n "$PLUGINS" ] && ARGS="$ARGS"$'TW5_PLUGINS='"$PLUGINS"$'\n'
