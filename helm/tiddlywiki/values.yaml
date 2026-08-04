@@ -8,6 +8,18 @@ image:
   pullPolicy: IfNotPresent
   pullSecrets: []
 
+# Build-time plugin baking. These values are read by the image-publish
+# workflow (.github/workflows/ghcr-publish.yml) and passed to the Docker build
+# as --build-arg, so the Dockerfile stays generic (ARG TW5_PLUGINS / TW5_PLUGIN_REF).
+# `plugins` is a space-separated list of GitHub "owner/repo[@ref]" plugin sources whose
+# plugins/ subdirectories are baked into the image; an optional "@ref" pins a tag/branch
+# per plugin (falls back to `ref` below). `ref` is the fallback branch/tag for any
+# plugin without a pin. Prefer this for nested/binary plugins that ConfigMap injection
+# cannot represent; simple flat text plugins can still go under the `plugins:` runtime list.
+imageBuild:
+  # ref: "master"
+  # plugins: "flibbles/tw5-graph@v1.7.1 flibbles/tw5-vis-network@v10.6.3"
+
 # -- Number of replicas.
 # NOTE: TiddlyWiki writes tiddlers directly to disk with no distributed
 # locking. With replicaCount > 1 you MUST use a ReadWriteMany storage
