@@ -1,15 +1,17 @@
 ARG NODE_VERSION=21.6.0
 ARG WIKI_NAME="mywiki"
 # Space-separated GitHub "owner/repo" plugin sources baked into /usr/src/app/baked-plugins at build time.
-# Each repo's plugins/ subdirectories are copied wholesale; TiddlyWiki activates them by plugin.info
-# title (plugin folder names are irrelevant), e.g. "$:/plugins/flibbles/graph". The chart adds
-# /usr/src/app/baked-plugins to TIDDLYWIKI_PLUGIN_PATH and merges each baked plugin.info title into
-# tiddlywiki.info so the baked plugins are both discoverable and activated.
-# Each entry may pin its own ref with "owner/repo@ref" (branch or tag). Entries without an "@" use
-# the TW5_PLUGIN_REF fallback. COPY . /usr/src/app/ below already copies the repo's own plugins/ dir
-# into /usr/src/app/plugins, so you could omit the download entirely by committing plugin sources here.
-#   docker build --build-arg TW5_PLUGINS="flibbles/tw5-graph@v1.7.1 flibbles/tw5-vis-network@v10.6.3"
-ARG TW5_PLUGINS="flibbles/tw5-graph@v1.7.1 flibbles/tw5-vis-network@v10.6.3"
+# Entry syntax: owner/repo[@ref][:subdir]
+#   - ref:    branch or tag; without "@" falls back to TW5_PLUGIN_REF (tag tried first, then branch).
+#   - subdir: subdirectory of the extracted tarball to copy (as a whole). Defaults to "plugins".
+#             TiddlyWiki's plugin path scan is recursive, so any copy that ends in a folder containing
+#             plugin.info is discovered; activation is by plugin.info title (folder names are irrelevant),
+#             e.g. "$:/plugins/flibbles/graph". The chart adds /usr/src/app/baked-plugins to
+#             TIDDLYWIKI_PLUGIN_PATH and merges each baked plugin.info title into tiddlywiki.info.
+# COPY . /usr/src/app/ below already copies the repo's own plugins/ dir into /usr/src/app/plugins, so
+# you could omit the download entirely by committing plugin sources here.
+#   docker build --build-arg TW5_PLUGINS="flibbles/tw5-graph@v1.7.1 bimlas/tw5-kin-filter@v1.0.1"
+ARG TW5_PLUGINS="flibbles/tw5-graph@v1.7.1 flibbles/tw5-vis-network@v10.6.3 flibbles/tw5-relink@v2.6.0 bimlas/tw5-kin-filter@v1.0.1 crazko/krystal sobjornstad/TiddlyRemember@v1.4.1:tw-plugin tiddly-gittly/tw-command-palette@v2.4.0:src"
 ARG TW5_PLUGIN_REF=master
 
 # Base Image
@@ -25,14 +27,16 @@ COPY . /usr/src/app/
 RUN apk add --no-cache curl tar \
     && mkdir -p /usr/src/app/baked-plugins \
     && for entry in $TW5_PLUGINS; do \
-         repo="${entry%@*}"; ref="${entry#*@}"; \
-         if [ "$ref" = "$repo" ]; then ref="$TW5_PLUGIN_REF"; fi; \
+         defspec="${entry%%:*}"; subdir="${entry#*:}"; \
+         if [ "$subdir" = "$entry" ]; then subdir="plugins"; fi; \
+         ref="${defspec#*@}"; repo="${defspec%@*}"; \
+         if [ "$ref" = "$defspec" ]; then ref="$TW5_PLUGIN_REF"; fi; \
          name="${repo##*/}"; \
-         echo "Baking plugins from ${repo} (ref: ${ref})"; \
+         echo "Baking ${repo} (ref: ${ref}, subdir: ${subdir})"; \
          curl -fsSL -o "/tmp/${name}.tar.gz" "https://github.com/${repo}/archive/refs/tags/${ref}.tar.gz" \
          || curl -fsSL -o "/tmp/${name}.tar.gz" "https://github.com/${repo}/archive/refs/heads/${ref}.tar.gz"; \
          tar -xzf "/tmp/${name}.tar.gz" -C /tmp \
-         && cp -r /tmp/${name}-*/plugins/* /usr/src/app/baked-plugins/ \
+         && cp -r /tmp/${name}-*/${subdir} /usr/src/app/baked-plugins/ \
          && rm -rf "/tmp/${name}"*; \
        done \
     && chown -R node:node /usr/src/app/baked-plugins
