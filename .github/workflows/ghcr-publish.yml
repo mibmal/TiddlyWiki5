@@ -38,6 +38,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
 
+      - name: Read imageBuild build args from helm values
+        id: image_build
+        run: |
+          PLUGINS=$(awk '/^imageBuild:/{f=1} f && /^[^#]*plugins:/{sub(/^[ \t]*plugins:[ \t]*"?/,"");sub(/".*/,"");print;exit}' helm/tiddlywiki/values.yaml)
+          REF=$(awk '/^imageBuild:/{f=1} f && /^[^#]*ref:/{sub(/^[ \t]*ref:[ \t]*"?/,"");sub(/".*/,"");print;exit}' helm/tiddlywiki/values.yaml)
+          ARGS=""
+          [ -n "$REF" ] && ARGS="$ARGS"$'TW5_PLUGIN_REF='"$REF"$'\n'
+          [ -n "$PLUGINS" ] && ARGS="$ARGS"$'TW5_PLUGINS='"$PLUGINS"$'\n'
+          echo "build_args=$ARGS" >> "$GITHUB_OUTPUT"
+
       - name: Build run stage (loaded locally)
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
         with:
@@ -45,6 +55,7 @@ jobs:
           target: run
           load: true
           tags: tiddlywiki5:smoke
+          build-args: ${{ steps.image_build.outputs.build_args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
