@@ -137,28 +137,38 @@ spec:
               const baked = '/usr/src/app/baked-plugins';
               const infoPath = data + '/tiddlywiki.info';
               if (!fs.existsSync(infoPath)) { console.log('activate: no tiddlywiki.info; skipping'); process.exit(0); }
+              // TiddlyWiki's tiddlywiki.info[]/plugins array stores RELATIVE library
+              // paths (e.g. "plugins/graph"), resolved against each plugin search path
+              // by $tw.findLibraryItem (path.resolve(searchPath,"./"+name)). It does
+              // NOT accept "$:/plugins/.../..." titles — those resolve to a nonexistent
+              // directory and produce "Warning: Cannot find plugin". So we record each
+              // baked plugin folder's path relative to the baked root, and also its
+              // title (from plugin.info) so we can drop any stale title-form entries a
+              // previous buggy version wrote.
+              const entries = [];
               const titles = [];
-              const walk = (dir) => {
+              const walk = (dir, rel) => {
                 for (const e of fs.readdirSync(dir, {withFileTypes:true})) {
                   const p = dir + '/' + e.name;
-                  if (e.isDirectory()) walk(p);
+                  if (e.isDirectory()) walk(p, rel ? rel + '/' + e.name : e.name);
                   else if (e.isFile() && e.name === 'plugin.info') {
+                    if (rel) { entries.push(rel); }
                     try { titles.push(JSON.parse(fs.readFileSync(p,'utf8')).title); } catch(_) {}
                   }
                 }
               };
-              if (fs.existsSync(baked)) walk(baked);
-              if (!titles.length) { console.log('activate: no baked plugins found'); process.exit(0); }
+              if (fs.existsSync(baked)) walk(baked, '');
+              if (!entries.length) { console.log('activate: no baked plugins found'); process.exit(0); }
               const info = JSON.parse(fs.readFileSync(infoPath,'utf8'));
-              const cur = info.plugins || [];
+              let cur = (info.plugins || []).filter((x) => titles.indexOf(x) === -1);
               let changed = false;
-              for (const t of titles) { if (!cur.includes(t)) { cur.push(t); changed = true; } }
+              for (const en of entries) { if (cur.indexOf(en) === -1) { cur.push(en); changed = true; } }
               if (changed) {
                 info.plugins = cur;
                 fs.writeFileSync(infoPath, JSON.stringify(info,null,2) + "\n");
-                console.log('activate: merged baked plugins: ' + titles.join(', '));
+                console.log('activate: merged baked plugin paths: ' + entries.join(', '));
               } else {
-                console.log('activate: baked plugins already present: ' + titles.join(', '));
+                console.log('activate: baked plugin paths already present: ' + entries.join(', '));
               }
           volumeMounts:
             - name: wiki-data
