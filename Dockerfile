@@ -35,7 +35,12 @@ COPY package.json .
 RUN npm install
 COPY . /usr/src/app/
 
-# Bake plugins (generic) so the wiki can load them
+# Bake plugins (generic) so the wiki can load them. Each entry
+# "owner/repo[@ref][:subdir]" downloads a GitHub tag tarball (falling back to a
+# branch) and copies its `subdir` (default "plugins") into baked-plugins.
+# Hardened: we only tar/cp when a tarball was actually fetched, and a failed
+# download aborts with a clear per-entry message instead of a cryptic `tar`
+# exit-2 on a missing file.
 RUN apk add --no-cache curl tar \
     && mkdir -p /usr/src/app/baked-plugins \
     && for entry in $TW5_PLUGINS; do \
@@ -43,13 +48,19 @@ RUN apk add --no-cache curl tar \
          if [ "$subdir" = "$entry" ]; then subdir="plugins"; fi; \
          ref="${defspec#*@}"; repo="${defspec%@*}"; \
          if [ "$ref" = "$defspec" ]; then ref="$TW5_PLUGIN_REF"; fi; \
-         name="${repo##*/}"; \
+         name="${repo##*/}"; tarball="/tmp/${name}.tar.gz"; \
          echo "Baking ${repo} (ref: ${ref}, subdir: ${subdir})"; \
-         curl -fsSL -o "/tmp/${name}.tar.gz" "https://github.com/${repo}/archive/refs/tags/${ref}.tar.gz" \
-         || curl -fsSL -o "/tmp/${name}.tar.gz" "https://github.com/${repo}/archive/refs/heads/${ref}.tar.gz"; \
-         tar -xzf "/tmp/${name}.tar.gz" -C /tmp \
-         && cp -r /tmp/${name}-*/${subdir} /usr/src/app/baked-plugins/ \
-         && rm -rf "/tmp/${name}"*; \
+         rm -f "$tarball"; \
+         curl -fsSL -o "$tarball" "https://github.com/${repo}/archive/refs/tags/${ref}.tar.gz" \
+         || curl -fsSL -o "$tarball" "https://github.com/${repo}/archive/refs/heads/${ref}.tar.gz"; \
+         if [ -s "$tarball" ]; then \
+           tar -xzf "$tarball" -C /tmp \
+           && cp -r /tmp/${name}-*/${subdir} /usr/src/app/baked-plugins/ \
+           && rm -rf "$tarball"; \
+         else \
+           echo "ERROR: failed to download plugins from ${repo} (ref: ${ref})" >&2; \
+           exit 1; \
+         fi; \
        done \
     && chown -R node:node /usr/src/app/baked-plugins
 
