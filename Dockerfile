@@ -1,3 +1,9 @@
+# syntax=docker/dockerfile:1
+# The syntax= directive above (must be the first line) pins the BuildKit
+# Dockerfile frontend so `docker build --check .` uses a fixed linter-enabled
+# parser instead of whatever is bundled with the local engine. It requests the
+# built-in syntax/structure check from inside the Dockerfile itself; the CI job
+# `.github/workflows/ci.yml` (`dockerfile-check`) runs that check on every PR.
 ARG NODE_VERSION=21.6.0
 ARG WIKI_NAME="mywiki"
 # Space-separated GitHub "owner/repo" plugin sources baked into /usr/src/app/baked-plugins at build time.
