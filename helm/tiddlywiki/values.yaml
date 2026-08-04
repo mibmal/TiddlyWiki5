@@ -4,7 +4,7 @@
 # -- Container image settings
 image:
   repository: ghcr.io/mibmal/tiddlywiki5
-  tag: "5.5.0-prerelease.23"
+  tag: "5.5.0-prerelease.24"
   pullPolicy: IfNotPresent
   pullSecrets: []
 
