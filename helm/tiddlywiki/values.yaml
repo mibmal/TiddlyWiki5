@@ -20,7 +20,7 @@ image:
 # command palette and an autocomplete plugin; CodeMirror (CM5) is already bundled in core.
 imageBuild:
   # ref: "master"
-  # plugins: "flibbles/tw5-graph@v1.7.1 flibbles/tw5-vis-network@v10.6.3 flibbles/tw5-relink@v2.6.0 bimlas/tw5-kin-filter@v1.0.1 crazko/krystal sobjornstad/TiddlyRemember@v1.4.1:tw-plugin"
+  # plugins: "flibbles/tw5-graph@v1.7.1 flibbles/tw5-vis-network@v10.6.3 flibbles/tw5-relink@v2.6.0 bimlas/tw5-kin-filter@v1.0.1 sobjornstad/TiddlyRemember@v1.4.1:tw-plugin"
 
 # -- Number of replicas.
 # NOTE: TiddlyWiki writes tiddlers directly to disk with no distributed

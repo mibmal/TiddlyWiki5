@@ -17,7 +17,7 @@ ARG WIKI_NAME="mywiki"
 # COPY . /usr/src/app/ below already copies the repo's own plugins/ dir into /usr/src/app/plugins, so
 # you could omit the download entirely by committing plugin sources here.
 #   docker build --build-arg TW5_PLUGINS="flibbles/tw5-graph@v1.7.1 bimlas/tw5-kin-filter@v1.0.1"
-ARG TW5_PLUGINS="flibbles/tw5-graph@v1.7.1 flibbles/tw5-vis-network@v10.6.3 flibbles/tw5-relink@v2.6.0 bimlas/tw5-kin-filter@v1.0.1 crazko/krystal sobjornstad/TiddlyRemember@v1.4.1:tw-plugin"
+ARG TW5_PLUGINS="flibbles/tw5-graph@v1.7.1 flibbles/tw5-vis-network@v10.6.3 flibbles/tw5-relink@v2.6.0 bimlas/tw5-kin-filter@v1.0.1 sobjornstad/TiddlyRemember@v1.4.1:tw-plugin"
 ARG TW5_PLUGIN_REF=master
 
 # Base Image
